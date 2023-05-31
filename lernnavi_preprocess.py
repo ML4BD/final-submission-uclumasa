@@ -55,6 +55,7 @@ def load_mastery_array():
     return rows
 
 def get_mastery_dfs(rows):
+    print("---Starting dataframe creation---")
     # Create new dataframe from the list
     mastery_df = pd.DataFrame(rows, columns=['user_id', 'title', 'mastery', 'start_time' , 'diligence'])
     # Find the earliest start time for each user in events table
@@ -301,5 +302,5 @@ def get_mastery_dfs(rows):
     mastery_df_math['weeks_since_first_transaction'] = mastery_df_math.apply(lambda x: x['weeks_since_first_transaction_list'].index(x['weeks_since_first_transaction']), axis=1)
     # drop the list column
     mastery_df_math = mastery_df_math.drop(columns=['weeks_since_first_transaction_list'])
-
+    print("---Dataframe creation finished! ---")
     return mastery_df_german, mastery_df_math
