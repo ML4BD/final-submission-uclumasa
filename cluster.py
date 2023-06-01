@@ -23,10 +23,12 @@ def mkdir_p(mypath):
         else: raise
 
 
-def prepare_data(students: pd.DataFrame, min_week: int) -> np.ndarray:
+def prepare_data(students: pd.DataFrame, min_week: int, scale: bool = False) -> np.ndarray:
     """
     reshapes DataFrame from long to wide and returns an np.array
     :param df: pd.DataFrame with data in long format
+    :param min_week: minimum number of weeks, the student must have data for
+    :param scale: bool, if True, scale the data to have mean 0 and std 1
     :return: np.array with reshaped data
     """
     student_max_week = students.groupby('user_id')['weeks_since_first_transaction'].max()
@@ -38,6 +40,8 @@ def prepare_data(students: pd.DataFrame, min_week: int) -> np.ndarray:
                 .agg({'num_questions': lambda x: list(x)}))
     # drop users who have all 0s in the num_questions column
     df_array = df_array[df_array['num_questions'].apply(lambda x: sum(x)) > 0]
+    if scale:
+        df_array['num_questions'] = df_array['num_questions'].apply(lambda x: (x - np.mean(x)) / np.std(x))
     df_array.reset_index(inplace=True)
     data = np.asarray(df_array.num_questions.values.tolist())
     # also return the user_ids corresponding to each index in the array
@@ -221,6 +225,7 @@ def visualize_clusters(data, labels, weeks):
     # get unique labels
     plt.ion()
     unique_labels = np.unique(labels)
+    print(f"Number of clusters: {len(unique_labels)}, Label Length: {len(labels)}")
     fig, axs = plt.subplots(1, len(unique_labels), figsize=(16, 4), facecolor='w', edgecolor='k')
     axs = axs.ravel()
     student_count_in_each_label = {label: 0 for label in unique_labels}
@@ -231,13 +236,13 @@ def visualize_clusters(data, labels, weeks):
         # get number of students in cluster
         n_students = len(index[0])
         student_count_in_each_label[label] = n_students
-        for i in range(n_students):
+        for i in index[0]:
             axs[label].bar(range(weeks), data[i], alpha=0.3)
         axs[label].set_title('Group {0}'.format(label))
         axs[label].set_ylabel('Num_questions')
         axs[label].set_xlabel('weeks')
         # limit y axis to 0 - 500
-        axs[label].set_ylim([0, 500])
+        #axs[label].set_ylim([0, 1])
     for label in unique_labels:
         print('Group {0} has {1} students'.format(label, student_count_in_each_label[label]))
     plt.show()

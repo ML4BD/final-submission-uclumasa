@@ -33,7 +33,7 @@ def load_mastery_array():
     total = events[events['action']=='NAVIGATE_DASHBOARD'].shape[0]
     for index,row in vis.tqdm(events[events['action']=='NAVIGATE_DASHBOARD'].iterrows(), 
                             total=total, 
-                            desc="Processing records"):
+                            desc="Parsing mastery levels..."):
         json_loaded = json.loads(row['tracking_data'])
         if(json_loaded['trackingDataType'] != 'DASHBOARD_VIEW_DATA'):
             continue
@@ -56,6 +56,7 @@ def load_mastery_array():
 
 def get_mastery_dfs(rows):
     print("---Starting dataframe creation---")
+    print("\t-->Creating the initial dataframe...")
     # Create new dataframe from the list
     mastery_df = pd.DataFrame(rows, columns=['user_id', 'title', 'mastery', 'start_time' , 'diligence'])
     # Find the earliest start time for each user in events table
@@ -81,7 +82,8 @@ def get_mastery_dfs(rows):
     mastery_df = mastery_df[mastery_df.title != 'Orthografie']
     mastery_df_german = mastery_df[mastery_df['title'] == "Deutsch"]
     mastery_df_math = mastery_df[mastery_df['title'] == "Mathematik"]
-
+    print("\t\tInitial dataframe created")
+    print("\t-->Starting feature extension, merging tables...")
     # Now we will add extra features to this table
     """
         CREATE THE TABLE
@@ -93,7 +95,7 @@ def get_mastery_dfs(rows):
     new_transactions.event_date = pd.to_datetime(new_transactions.event_date)
     new_transactions.min_start_time = pd.to_datetime(new_transactions.min_start_time)
     new_transactions['weeks_since_first_transaction'] = (new_transactions['event_date'] - new_transactions['min_start_time']).dt.days // 7
-
+    print("\t\tTables merged")
     """
         FIND WEEKLY EVENT COUNT
     """
@@ -106,6 +108,7 @@ def get_mastery_dfs(rows):
     """
         FIND WEEKLY QUESTIONS SOLVED
     """
+    print("\t-->Finding weekly questions solved...")
     # Only consider question answering events (action = 'SUBMIT_ANSWER')
     num_questions_weekly = new_transactions[new_transactions.action == 'SUBMIT_ANSWER']
     num_questions_weekly = num_questions_weekly.dropna(subset = ["document_id"])
@@ -127,10 +130,11 @@ def get_mastery_dfs(rows):
     # Rename column to num_questions
     num_questions_weekly_math = num_questions_weekly_math.rename(columns={'action': 'num_questions'})
     num_questions_weekly_german = num_questions_weekly_german.rename(columns={'action': 'num_questions'})
-
+    print("\t\tWeekly questions solved found")
     """
     FIND WEEKLY CORRECT QUESTIONS SOLVED
     """
+    print("\t-->Finding weekly correct questions solved...")
     # Only consider question answering events that are correct (evaluation = 'CORRECT')
     num_correct_weekly = new_transactions[(new_transactions.evaluation == 'CORRECT') & (new_transactions.action == 'SUBMIT_ANSWER')]
     #Merge with documents and topics to separate german and math
@@ -150,10 +154,11 @@ def get_mastery_dfs(rows):
     # Rename column to num_questions
     num_correct_weekly_math = num_correct_weekly_math.rename(columns={'action': 'num_correct'})
     num_correct_weekly_german = num_correct_weekly_german.rename(columns={'action': 'num_correct'})
-
+    print("\t\tWeekly correct questions solved found")
     """
         FIND WEEKLY PARTIALLY CORRECT QUESTIONS SOLVED
     """
+    print("\t-->Finding weekly partially correct questions solved...")
     # Only consider question answering events that are correct (evaluation = 'PARTIAL')
     num_partial_weekly = new_transactions[(new_transactions.evaluation == 'PARTIAL') & (new_transactions.action == 'SUBMIT_ANSWER')]
     num_partial_weekly = num_partial_weekly.merge(doc_to_topic, how = 'left', on='document_id')
@@ -193,10 +198,11 @@ def get_mastery_dfs(rows):
     num_questions_weekly_math['percentage_correct'] = 100 * (num_questions_weekly_math.num_correct + 0.5*num_questions_weekly_math.num_partial)/num_questions_weekly_math.num_questions
     # Drop the columns num_correct and num_partial
     num_questions_weekly_math = num_questions_weekly_math.drop(columns=['num_correct','num_partial'])
-
+    print("\t\tWeekly partially correct questions solved found")
     """
     FIND THE REVIEW TASK COUNT
     """
+    print("\t-->Finding weekly review task count...")
     # Only consider question answering events (action = 'SUBMIT_ANSWER')
     num_review_weekly = new_transactions[new_transactions.action == 'VIEW_QUESTION']
     num_review_weekly = num_review_weekly.dropna(subset = ["document_id"])
@@ -215,10 +221,11 @@ def get_mastery_dfs(rows):
     # Rename column to num_review
     num_review_weekly_math = num_review_weekly_math.rename(columns={'action': 'num_review'})
     num_review_weekly_german = num_review_weekly_german.rename(columns={'action': 'num_review'})
-
+    print("\t\tWeekly review task count found")
     """
     FIND THE VIEW COUNT
     """
+    print("\t-->Finding weekly view count...")
     # Only consider question answering events (action = 'SUBMIT_ANSWER')
     num_view_weekly = new_transactions[new_transactions.action == 'REVIEW_TASK']
     num_view_weekly = num_view_weekly.dropna(subset = ["document_id"])
@@ -238,11 +245,11 @@ def get_mastery_dfs(rows):
     # Rename column to num_review
     num_view_weekly_math = num_view_weekly_math.rename(columns={'action': 'num_view'})
     num_view_weekly_german = num_view_weekly_german.rename(columns={'action': 'num_view'})
-
+    print("\t\tWeekly view count found")
     """
     FIND THE WINDOW VISIBLE RATIO FOR EACH USER
     """
-
+    print("\t-->Finding weekly window visible ratio...")
     # in the events table for each user find the count of action='WINDOW_VISIBLE_FALSE'
     # and action='WINDOW_VISIBLE_TRUE'
     # and then calculate the ratio of WINDOW_VISIBLE_TRUE / (WINDOW_VISIBLE_TRUE + WINDOW_VISIBLE_FALSE)
@@ -265,10 +272,11 @@ def get_mastery_dfs(rows):
 
     # Create a new dataframe with 2 columns: user_id and the ratio
     df_window_visible = pd.DataFrame({'user_id': num_window_visible_true.user_id, 'weeks_since_first_transaction': num_window_visible_true.weeks_since_first_transaction, 'ratio_window_visible': num_window_visible_true.action / (num_window_visible_true.action + num_window_visible_false.action)})
-
+    print("\t\tWeekly window visible ratio found")
     """
     MERGE ALL THE TABLES
     """
+    print("\t-->Constructing the final dataframes...")
     # Merge the tables together for german
     #mastery_df = mastery_df.merge(num_events_weekly, on=['user_id','weeks_since_first_transaction'], how='left')
     mastery_df_german = mastery_df_german.merge(num_questions_weekly_german, on=['user_id','weeks_since_first_transaction'], how='left')
@@ -302,5 +310,21 @@ def get_mastery_dfs(rows):
     mastery_df_math['weeks_since_first_transaction'] = mastery_df_math.apply(lambda x: x['weeks_since_first_transaction_list'].index(x['weeks_since_first_transaction']), axis=1)
     # drop the list column
     mastery_df_math = mastery_df_math.drop(columns=['weeks_since_first_transaction_list'])
+    print("\t\tFinal dataframes constructed")
     print("---Dataframe creation finished! ---")
     return mastery_df_german, mastery_df_math
+
+def get_users() -> pd.DataFrame:
+    return users
+
+def get_events() -> pd.DataFrame:
+    return events
+
+def get_transactions() -> pd.DataFrame:
+    return transactions
+
+def get_documents() -> pd.DataFrame:
+    return documents
+
+def get_topics_translated() -> pd.DataFrame:
+    return topics_translated
