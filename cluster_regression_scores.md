@@ -1,6 +1,6 @@
-# Scores Math
+# Regression Model
 
-## Regression
+## Math Scores
 
 | File Name | Model | Mean Squared Error | Root Mean Squared Error | Mean Absolute Error |
 | --- | --- | --- | --- | --- |
@@ -87,10 +87,7 @@
 |                              | Lasso (alpha=1.438449888287663)            | 60.8040267087313 | 7.797693678821405 | 5.180545854355172 |
 
 
-# Scores German
-
-## Regression
-
+## German Scores
 
 | Filename                        | Model                  | Mean Squared Error | Root Mean Squared Error | Mean Absolute Error |
 |---------------------------------|------------------------|-------------------:|------------------------:|--------------------:|
