@@ -15,6 +15,25 @@ final_submission_uclumasa
 ```
 ## Pre processing:
 
+To run the code provided in this repository, the following Python libraries should be installed in your environment:
+
+- **pandas**: A powerful data manipulation library that offers data structures to quickly analyze and organize data.
+- **importlib**: A built-in Python module for using import statements and managing modules dynamically.
+- **numpy**: A library for numerical operations. It offers support for arrays, matrices, and many mathematical functions.
+- **matplotlib**: A popular plotting and data visualization library.
+- **lernnavi_preprocess**: A custom library (provided in this repository as `lernnavi_preprocess.py`) for preprocessing data specific to this project.
+- **tqdm**: A library providing fast, extensible progress bars for loops and other iterative tasks. Here we use its `notebook` module for displaying progress bars in Jupyter notebooks.
+- **cluster**: This is likely a custom module (found in this repository as `cluster.py`) used for the clustering feature in the datasets.
+- **tslearn**: A machine learning library for time series analysis. Here, `cdist_dtw` is used for computing Dynamic Time Warping (DTW) distances.
+- **scikit-learn (sklearn)**: A comprehensive machine learning library. We use several modules, including model selection tools (`train_test_split`, `GridSearchCV`), linear models (`LinearRegression`, `Ridge`, `Lasso`), metrics (`mean_squared_error`, `make_scorer`, `mean_absolute_error`), and preprocessing tools (`MinMaxScaler`).
+- **os**: A built-in Python module for interacting with the operating system.
+- **torch**: PyTorch, a popular open-source library used for machine learning and deep learning tasks.
+- **seaborn**: A statistical data visualization library based on matplotlib. It provides a high-level interface for drawing attractive and informative statistical graphics.
+- **pathlib**: A built-in Python library for dealing with filesystem paths in a platform-agnostic way.
+- **colorama**: A library used for adding colored terminal text and enabling ANSI escape character interpretation on Windows machines.
+
+Please ensure all these libraries are installed to correctly execute the provided code. If you're using pip, you can install these libraries with the command `pip install pandas importlib numpy matplotlib tqdm tslearn scikit-learn torch seaborn pathlib colorama`. Note that for custom libraries (like `lernnavi_preprocess` and `cluster`), make sure they are available in the Python path.
+
 ### 1. Parsing the mastery level
 
 We have used the following code to get the mastery level from NAVIGATE_DASHBOARD task. We have decided not to use the
