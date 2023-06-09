@@ -78,9 +78,10 @@ def load_mastery_array():
 
 Each event that has the action of NAVIGATE_DASHBOARD has a JSON object serialized to a string in the tracking_data column
 In this JSON object, under the dashboard field we have the title field, which states if the topics under this JSON object belongs
-to Mathematics or German. Then under the topics field we have the actual topics, and under them we have the subtopics. We consider the
-mastery level of a user to be the summation of all his mastery of his subtopics.
+to Mathematics or German. Then under the topics field we have the actual topics, and under them we have the subtopics. We consider the mastery level of a user to be the summation of all his mastery of his subtopics.
+
 We also fetch the diligence level of the user which can be found right next to the mastery level in the JSON object, at the same level.
+
 ---
 
 ### 2. Creating timeseries data
