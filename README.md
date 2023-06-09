@@ -45,41 +45,42 @@ compared to our previous method.
 
 ```python
 # Get the total mastery as the sum of the mastery of all topics
-import json
-from tqdm import notebook as vis
-from numpy import mean as mean
-from numpy import sum as sum
-rows = []
-total = events[events['action']=='NAVIGATE_DASHBOARD'].shape[0]
-for index,row in vis.tqdm(events[events['action']=='NAVIGATE_DASHBOARD'].iterrows(),
-                          total=total,
-                          desc="Processing records"):
-    json_loaded = json.loads(row['tracking_data'])
-    if(json_loaded['trackingDataType'] != 'DASHBOARD_VIEW_DATA'):
-        continue
-    title = json_loaded['dashboard']['title']
-    if(len(json_loaded['dashboard']['topics']) == 0):
-        continue
-    topics = json_loaded['dashboard']['topics']
-    total_mastery = []
-    for topic in topics:
-        children = topic['children']
-        for child in children:
-            total_mastery.append(topic['userData']['mastery'])
-    user_id = row['user_id']
-    start_time = row.event_date
-    # add the row to the list
-    rows.append([user_id, title, sum(total_mastery), start_time])
+def load_mastery_array():
+    import json
+    from tqdm import notebook as vis
+    from numpy import mean as mean
+    from numpy import sum as sum
+    rows = []
+    total = events[events['action']=='NAVIGATE_DASHBOARD'].shape[0]
+    for index,row in vis.tqdm(events[events['action']=='NAVIGATE_DASHBOARD'].iterrows(), 
+                            total=total, 
+                            desc="Parsing mastery levels..."):
+        json_loaded = json.loads(row['tracking_data'])
+        if(json_loaded['trackingDataType'] != 'DASHBOARD_VIEW_DATA'):
+            continue
+        title = json_loaded['dashboard']['title']
+        if(len(json_loaded['dashboard']['topics']) == 0):
+            continue
+        topics = json_loaded['dashboard']['topics']
+        total_mastery = []
+        total_diligence = []
+        for topic in topics:
+            children = topic['children']
+            for child in children:
+                total_mastery.append(topic['userData']['mastery'])
+                total_diligence.append(topic['userData']['diligence'])
+        user_id = row['user_id']
+        start_time = row.event_date
+        # add the row to the list
+        rows.append([user_id, title, sum(total_mastery), start_time, sum(total_diligence)])
+    return rows
 ```
 
 Each event that has the action of NAVIGATE_DASHBOARD has a JSON object serialized to a string in the tracking_data column
 In this JSON object, under the dashboard field we have the title field, which states if the topics under this JSON object belongs
 to Mathematics or German. Then under the topics field we have the actual topics, and under them we have the subtopics. We consider the
 mastery level of a user to be the summation of all his mastery of his subtopics.
-
-**Note there is also the diligence level right next to the mastery level in the json object. We currently do not consider this field,
-but it could be interesting to later look at it.**
-
+We also fetch the diligence level of the user which can be found right next to the mastery level in the JSON object, at the same level.
 ---
 
 ### 2. Creating timeseries data
@@ -165,7 +166,104 @@ during their time spent on the platform.
 As we were concerned with predicting the mastery level, we have decided that these users would not be valuable to us, and thus have dropped them from the dataframe.
 The count of these users were 26.
 
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-24ddc0f5d75046c5622901739e7c5dd533143b0c8e959d652212380cedb1ea36.svg)](https://classroom.github.com/a/CNxME27U)
+>___
+>**All of these pre-processing steps are explained in detail in m4_lernnavi_uclumasa.ipynb notebook, but we have also extracted these steps into a file on its own called `lernnavi_preprocess.py` which enables us to do all of our preprocessing in just two quick function calls**
+>```python
+>import lernnavi_preprocess as pp
+>
+>rows = pp.load_mastery_array()
+>mastery_df_german, mastery_df_math = pp.get_mastery_dfs(rows)
+>```
+>___
+___
+### 4. Clustering
+To further extend our data, we have looked into student's behaviours and seeked to cluster them utilizing Spectral Clustering. For this we have written the `cluster.py` file. In which we have the following functions:
+
+```python 
+    def prepare_data(students: pd.DataFrame, min_week: int, scale: bool = False) -> np.ndarray:
+    
+    def visualize_data(student: np.ndarray)
+
+    def get_distance_matrix(X, metric='euclidean', window=2):
+
+    def get_affinity_matrix(D, gamma=1):
+
+    def get_adjacency(S, connectivity='full')
+
+    def spectral_clustering(W, n_clusters, random_state=111)
+
+    def plot_metrics(n_clusters_list, metric_dictionary, save=False, outdir= 'Images', filename='metrics.png')
+
+    def get_heuristics_spectral(W, n_clusters_list, plot=True, save=False, outdir='Images', filename='metrics.png')
+
+    def visualize_clusters(data, labels, weeks):
+```
+
+All the function's documentation can be found in the `cluster.py` file. And another quick explanation of the function can be found in our report. We have used the `get_heuristics_spectral` function to get the best number of clusters for our data. We have done a sweeping search to find the best parameters for our clusters. The search is implemented as follows: (can also be found in `learnnavi_clustering_efforts.ipynb`)
+
+```python
+import lernnavi_preprocess as pp
+import cluster
+
+# Load the preprocessed data
+rows = pp.load_mastery_array()
+mastery_df_german, mastery_df_math = pp.get_mastery_dfs(rows)
+
+# Get the data ready for clustering
+user_ids, data = cluster.prepare_data(students=mastery_df_german, min_week=6, scale = True)
+
+# Compute the distance for each window size we'll be sweeping
+windows = [0,1,2,3,4,5,6]
+D_for_window = {
+    window: cluster.get_distance_matrix(data, metric='dtw', window=window) if window != 0 else cluster.get_distance_matrix(data, metric='e') for window in windows
+}
+# Gamma and k values to sweep for
+gammas = [0.01, 0.1, 0.5, 1] + np.arange(2, 10, 0.5).tolist() + np.arange(10, 30, 1).tolist() + np.arange(30, 100, 10).tolist()
+n_cluster_list = range(2, 30)
+
+# Begin sweeping, swoosh swoosh :)
+for window in vis.tqdm(windows, desc='Sweeping windows'):
+    D = D_for_window[window]
+    for gamma in vis.tqdm(gammas, desc='Sweeping gammas'):
+        S = cluster.get_affinity_matrix(D, gamma)
+        W = cluster.get_adjacency(S)
+        df_labels = cluster.get_heuristics_spectral(W, n_cluster_list, save=True, outdir=f'Images/scaled/window={window}', filename=f'gamma_{gamma}.png')
+        plt.close('all')
+```
+
+The results of this search can be found under the `images_german` and `images_math` folders. For 2 data frames respectively. 
+
+An example clustering result for, k=3 gamma=5 window size=1, plotted using the visualize_clusters function is computed as follows:
+
+> Yet again, for the curious reader, we'd like to remind that more examples can be found in `lernnavi_clustering_efforts.ipynb` notebook.
+```python
+import pandas as pd
+def get_original_rows(user_ids, labels, original_df, min_weeks=6):
+    """
+    This function is used to get the non-scaled version of the data, in the case that cluster.prepare_data() function
+    was used with scaled=True
+    """
+    temp = original_df.merge(pd.DataFrame({'user_id': user_ids, 'cluster': labels}), on='user_id', how='inner')
+    temp = temp[temp['weeks_since_first_transaction'] < min_weeks]
+    temp = (temp.sort_values(['user_id', 'weeks_since_first_transaction'], ascending=True)
+                .groupby('user_id')
+                .agg({'num_questions': lambda x: list(x)}))
+    temp = temp[temp['num_questions'].apply(lambda x: sum(x)) > 0]
+    temp.reset_index(inplace=True)
+    temp = np.asarray(temp.num_questions.values.tolist())
+    return temp
+
+gamma = 5
+k = 3
+window = 1
+D = D_for_window_german[window] # Calculated previously in the sweeping search
+S = cluster.get_affinity_matrix(D, gamma) 
+W = cluster.get_adjacency(S, connectivity='epsilon')
+kmeans, proj_X, eigenvals_sorted = cluster.spectral_clustering(W, k)
+cluster.visualize_clusters(get_original_rows(user_ids_german, kmeans.labels_, mastery_df_german, 6), kmeans.labels_, 6)
+```
+
+![clustering_image](./images_german/clustering.png "Result for clusters, k=3 gamma=5 window size=1, visualized with visualize_clusters function")
 
 ## Model Building
 
@@ -287,9 +385,9 @@ Then, we computed evaluation metric scores for LSTM and GRU and compared with a 
 
 ## Team Reflection
 
-For this milestone, the members performed the following tasks:
+For this project, the members performed the following tasks:
 
-**Aybars Yazici:** Data exploration and preprocessing, extracting mastery levels and the majority of the features.
+**Aybars Yazici:** Data exploration and preprocessing(implementation of `lernnavi_preprocess.py`), extracting mastery levels and the majority of the features. Implementing `cluster.py` and the grid search for cluster hyperparameters.
 
 **Ilker Gul:** Implementation of Regression, LSTM, and GRU models. Training, testing, and evaluating the models on the given dataset. Visualization of the results.
 
