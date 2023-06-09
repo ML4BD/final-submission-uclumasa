@@ -22,6 +22,7 @@ To run the code provided in this repository, the following Python libraries shou
 - **numpy**: A library for numerical operations. It offers support for arrays, matrices, and many mathematical functions.
 - **matplotlib**: A popular plotting and data visualization library.
 - **lernnavi_preprocess**: A custom library (provided in this repository as `lernnavi_preprocess.py`) for preprocessing data specific to this project.
+- **open_file**: A custom module (found in this repository in `utils.py`) used for reading the datasets in pandas dataframe format.
 - **tqdm**: A library providing fast, extensible progress bars for loops and other iterative tasks. Here we use its `notebook` module for displaying progress bars in Jupyter notebooks.
 - **cluster**: This is likely a custom module (found in this repository as `cluster.py`) used for the clustering feature in the datasets.
 - **tslearn**: A machine learning library for time series analysis. Here, `cdist_dtw` is used for computing Dynamic Time Warping (DTW) distances.
@@ -32,7 +33,7 @@ To run the code provided in this repository, the following Python libraries shou
 - **pathlib**: A built-in Python library for dealing with filesystem paths in a platform-agnostic way.
 - **colorama**: A library used for adding colored terminal text and enabling ANSI escape character interpretation on Windows machines.
 
-Please ensure all these libraries are installed to correctly execute the provided code. If you're using pip, you can install these libraries with the command `pip install pandas importlib numpy matplotlib tqdm tslearn scikit-learn torch seaborn pathlib colorama`. Note that for custom libraries (like `lernnavi_preprocess` and `cluster`), make sure they are available in the Python path.
+Please ensure all these libraries are installed to correctly execute the provided code. If you're using pip, you can install these libraries with the command `pip install pandas importlib numpy matplotlib tqdm tslearn scikit-learn torch seaborn pathlib colorama`. Note that for custom libraries (like `lernnavi_preprocess`, `cluster`, and `open_file`), make sure they are available in the Python path.
 
 ### 1. Parsing the mastery level
 
