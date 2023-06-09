@@ -5,14 +5,12 @@ final_submission_uclumasa
 ├── cluster_csv
 ├── cluster_regression_scores.md
 ├── cluster.py
-├── data
 ├── images_german
 ├── images_math
 ├── lernnavi_clustering_efforts.ipynb
 ├── lernnavi_preprocess.py
 ├── lstm_functions.py
 ├── m4_lernnavi_uclumasa.ipynb
-├── __pycache__
 └── utils.py
 ```
 ## Pre processing:
