@@ -13,7 +13,7 @@ final_submission_uclumasa
 ├── m4_lernnavi_uclumasa.ipynb
 └── utils.py
 ```
-## Pre processing:
+## Requirements to run the code
 
 To run the code provided in this repository, the following Python libraries should be installed in your environment:
 
@@ -34,6 +34,8 @@ To run the code provided in this repository, the following Python libraries shou
 - **colorama**: A library used for adding colored terminal text and enabling ANSI escape character interpretation on Windows machines.
 
 Please ensure all these libraries are installed to correctly execute the provided code. If you're using pip, you can install these libraries with the command `pip install pandas importlib numpy matplotlib tqdm tslearn scikit-learn torch seaborn pathlib colorama`. Note that for custom libraries (like `lernnavi_preprocess`, `cluster`, and `open_file`), make sure they are available in the Python path.
+
+## Pre processing:
 
 ### 1. Parsing the mastery level
 
