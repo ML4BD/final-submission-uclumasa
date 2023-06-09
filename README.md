@@ -1,5 +1,5 @@
 ## Folder Structure
-
+```
 final_submission_uclumasa
 │
 ├── cluster_csv
@@ -14,7 +14,7 @@ final_submission_uclumasa
 ├── m4_lernnavi_uclumasa.ipynb
 ├── __pycache__
 └── utils.py
-
+```
 ## Pre processing:
 
 ### 1. Parsing the mastery level
