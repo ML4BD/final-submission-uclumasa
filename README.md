@@ -392,10 +392,12 @@ For this project, the members performed the following tasks:
 
 **Ilker Gul:** Implementation of Regression, LSTM, and GRU models. Training, testing, and evaluating the models on the given dataset. Visualization of the results.
 
-**Can Kirimca:** Evaluation of the models and visualization of the results. Extraction of a few features and separating the user records into Math and German.
+**Can Kirimca:** Evaluation of the models and visualization of the results. Extraction of a few features and separating the user records into Math and German. Experimenting with different clustering parameters.
 
 Although different members worked on different components of the project, we frequently held meetings to discuss the intermediate results and consulted each member on each step. 
 
-Since LSTM and GRU have large numbers of parameters, our main concern was that the amount of data might be insufficient to train those models. However, these models performed better than we expected and managed the capture the sequential patterns in our data, and as previously stated, they performed significantly better than regression models. One potential task for the future might be to perform data augmentation to train these models on larger data as we expect them to perform better on larger datasets.
+Since LSTM and GRU have large numbers of parameters, our main concern was that the amount of data might be insufficient to train those models. However, these models performed better than we expected and managed the capture the sequential patterns in our data, and as previously stated, they performed significantly better than regression models. 
 
-Furthermore, one of the possible reasons why the regressions performed poorly is that we need to find features that describe the patterns in the data. One of our strategies for the next milestone will be to explore the dataset further and extract more meaningful features to improve the predictive performance of each model used.
+To further improve the results obtained in this study, the student behavior can be analyzed and predicted for specific topics of Math and German, enabling even more specialized predictions based on the topic. Our study was not conducted on such a topic-by-topic basis due to the insufficiency of data within the scope of each individual topic. Given a larger dataset, a topic-by-topic analysis could provide significant improvements in mastery level prediction.
+
+Another way to extend this study is to examine the behavior of the students who work on both subjects (Mathematics and German) instead of completely separating the two subjects and analyzing them independently. Such an effort would enable the examination of students' mastery level improvement when they focus on two subjects simultaneously, and its comparison with the case where the student focuses only on a single subject.
